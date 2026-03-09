@@ -1,1 +1,2 @@
-runtime.txt
+streamlit>=1.40,<2
+altair<7

@@ -1,8 +1,8 @@
+streamlit>=1.40
+altair<7
 numpy
 pandas
 scipy
 matplotlib
 plotly
-streamlit>=1.40,<2
-altair<7
 pytest
