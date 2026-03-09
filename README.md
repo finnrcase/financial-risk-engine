@@ -65,15 +65,6 @@ Built with Streamlit for:
 
 ---
 
-## Dashboard Preview
-
-![Main Dashboard](outputs/figures/dashboard_main.png)
-
-![Scenario Analysis](outputs/figures/dashboard_scenarios.png)
-
-![Optimization View](outputs/figures/dashboard_optimization.png)
-
-
 Example portfolio:
 
 - **40% Equities**
@@ -137,3 +128,4 @@ financial-risk-engine/
 ├── requirements.txt
 ├── runtime.txt
 └── README.md
+
