@@ -3,5 +3,6 @@ pandas
 scipy
 matplotlib
 plotly
-streamlit
+streamlit>=1.40,<2
+altair<7
 pytest
