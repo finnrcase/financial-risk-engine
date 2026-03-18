@@ -44,6 +44,7 @@ from src.optimization import (
     optimize_max_sharpe,
     generate_efficient_frontier,
 )
+from src.jr_analyst import generate_jr_analyst_commentary
 from src.visualization import (
     plot_return_distribution,
     plot_portfolio_paths,
@@ -487,6 +488,17 @@ optimization_weights_display = optimization_weights_df.copy()
 for column in ["current_weight", "min_variance_weight", "max_sharpe_weight"]:
     optimization_weights_display[column] = optimization_weights_display[column].map(format_pct)
 
+jr_analyst_commentary = generate_jr_analyst_commentary(
+    weights=weights,
+    asset_names=asset_names,
+    risk_summary=risk_summary,
+    risk_contribution_summary=risk_contribution_summary,
+    scenario_comparison_df=scenario_comparison_df,
+    current_portfolio_stats=current_portfolio_stats,
+    min_variance_portfolio=min_variance_portfolio,
+    max_sharpe_portfolio=max_sharpe_portfolio,
+)
+
 # -----------------------------------------------------------------------------
 # AI scenario state
 # -----------------------------------------------------------------------------
@@ -551,11 +563,12 @@ metric_col_7.metric("Max Drawdown", format_pct(risk_summary["max_drawdown"]))
 metric_col_8.metric("Sharpe Ratio", format_num(risk_summary["sharpe_ratio"]))
 
 st.divider()
-tab_1, tab_2, tab_3, tab_4, tab_5 = st.tabs([
+tab_1, tab_2, tab_3, tab_4, tab_5, tab_6 = st.tabs([
     "Core Risk Dashboard",
     "Risk Attribution",
     "Scenario Comparison",
     "Optimization",
+    "JrAnalyst.AI",
     "AI Scenario Designer",
 ])
 
@@ -665,6 +678,29 @@ with tab_4:
     )
 
 with tab_5:
+    st.markdown("### JrAnalyst.AI")
+    st.write(
+        "A deterministic interpretation layer that translates the current "
+        "portfolio analytics into structured risk commentary for investment teams."
+    )
+
+    commentary_container = st.container(border=True)
+    with commentary_container:
+        for section_title, section_text in jr_analyst_commentary["sections"].items():
+            st.markdown(f"**{section_title}**")
+            st.write(section_text)
+
+    st.markdown("**Key Takeaways**")
+    takeaway_col_1, takeaway_col_2, takeaway_col_3 = st.columns(3)
+    takeaway_columns = [takeaway_col_1, takeaway_col_2, takeaway_col_3]
+
+    for column, takeaway in zip(takeaway_columns, jr_analyst_commentary["key_takeaways"]):
+        with column:
+            takeaway_container = st.container(border=True)
+            with takeaway_container:
+                st.write(takeaway)
+
+with tab_6:
     st.markdown("### AI Scenario Designer")
     st.write(
         "Translate a macro narrative into structured return, volatility, and "
