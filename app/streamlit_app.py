@@ -28,6 +28,10 @@ from src.validation import validate_inputs
 from src.portfolio import build_covariance_matrix
 from src.simulation import run_monte_carlo_engine
 from src.risk_metrics import build_risk_summary
+from src.ai_scenarios import (
+    build_ai_scenario_adjustments,
+    summarize_ai_scenario,
+)
 from src.scenarios import get_available_scenarios, apply_scenario
 from src.risk_contribution import build_risk_contribution_summary
 from src.scenario_analysis import (
@@ -484,6 +488,19 @@ for column in ["current_weight", "min_variance_weight", "max_sharpe_weight"]:
     optimization_weights_display[column] = optimization_weights_display[column].map(format_pct)
 
 # -----------------------------------------------------------------------------
+# AI scenario state
+# -----------------------------------------------------------------------------
+
+if "ai_scenario_adjustments" not in st.session_state:
+    st.session_state["ai_scenario_adjustments"] = None
+
+if "ai_scenario_risk_summary" not in st.session_state:
+    st.session_state["ai_scenario_risk_summary"] = None
+
+if "ai_scenario_simulation_results" not in st.session_state:
+    st.session_state["ai_scenario_simulation_results"] = None
+
+# -----------------------------------------------------------------------------
 # Display
 # -----------------------------------------------------------------------------
 
@@ -534,11 +551,12 @@ metric_col_7.metric("Max Drawdown", format_pct(risk_summary["max_drawdown"]))
 metric_col_8.metric("Sharpe Ratio", format_num(risk_summary["sharpe_ratio"]))
 
 st.divider()
-tab_1, tab_2, tab_3, tab_4 = st.tabs([
+tab_1, tab_2, tab_3, tab_4, tab_5 = st.tabs([
     "Core Risk Dashboard",
     "Risk Attribution",
     "Scenario Comparison",
     "Optimization",
+    "AI Scenario Designer",
 ])
 
 with tab_1:
@@ -645,3 +663,206 @@ with tab_4:
         min_variance_portfolio,
         max_sharpe_portfolio,
     )
+
+with tab_5:
+    st.markdown("### AI Scenario Designer")
+    st.write(
+        "Translate a macro narrative into structured return, volatility, and "
+        "correlation adjustments before running a separate simulation."
+    )
+
+    ai_prompt = st.text_area(
+        "Scenario Prompt",
+        value=st.session_state.get(
+            "ai_scenario_prompt",
+            "Severe tech selloff with sticky inflation and weak bond performance",
+        ),
+        height=120,
+        placeholder="Describe a macro or market regime in plain language.",
+        key="ai_scenario_prompt",
+    )
+
+    ai_action_col_1, ai_action_col_2 = st.columns([1, 1])
+
+    with ai_action_col_1:
+        generate_ai_scenario = st.button(
+            "Generate AI Scenario",
+            use_container_width=True,
+        )
+
+    with ai_action_col_2:
+        run_ai_scenario = st.button(
+            "Run AI Scenario Simulation",
+            use_container_width=True,
+            disabled=st.session_state["ai_scenario_adjustments"] is None,
+        )
+
+    if generate_ai_scenario:
+        if not ai_prompt.strip():
+            st.warning("Enter a scenario prompt to generate structured assumptions.")
+            st.session_state["ai_scenario_adjustments"] = None
+            st.session_state["ai_scenario_risk_summary"] = None
+            st.session_state["ai_scenario_simulation_results"] = None
+        else:
+            try:
+                st.session_state["ai_scenario_adjustments"] = build_ai_scenario_adjustments(
+                    prompt=ai_prompt,
+                    asset_names=asset_names,
+                    base_returns=daily_mean_returns,
+                    base_vols=daily_volatilities,
+                    base_corr=correlation_matrix,
+                )
+                st.session_state["ai_scenario_risk_summary"] = None
+                st.session_state["ai_scenario_simulation_results"] = None
+            except Exception as exc:
+                st.error(f"AI scenario generation error: {exc}")
+                st.session_state["ai_scenario_adjustments"] = None
+
+    ai_scenario_adjustments = st.session_state["ai_scenario_adjustments"]
+
+    if ai_scenario_adjustments is not None:
+        ai_summary = summarize_ai_scenario(ai_scenario_adjustments)
+        ai_covariance_daily = build_covariance_matrix(
+            ai_scenario_adjustments["adjusted_volatilities"],
+            ai_scenario_adjustments["adjusted_correlation_matrix"],
+        )
+
+        preview_df = pd.DataFrame({
+            "asset": asset_names,
+            "base_return_annual": annual_mean_returns,
+            "return_shock_annual": daily_return_to_annual(
+                np.array([
+                    ai_scenario_adjustments["return_shocks"][asset_name]
+                    for asset_name in asset_names
+                ])
+            ),
+            "adjusted_return_annual": daily_return_to_annual(
+                ai_scenario_adjustments["adjusted_mean_returns"]
+            ),
+            "base_volatility_annual": annual_volatilities,
+            "volatility_multiplier": [
+                ai_scenario_adjustments["volatility_multipliers"][asset_name]
+                for asset_name in asset_names
+            ],
+            "adjusted_volatility_annual": daily_vol_to_annual(
+                ai_scenario_adjustments["adjusted_volatilities"]
+            ),
+        })
+
+        preview_display = preview_df.copy()
+        for column in [
+            "base_return_annual",
+            "return_shock_annual",
+            "adjusted_return_annual",
+            "base_volatility_annual",
+            "adjusted_volatility_annual",
+        ]:
+            preview_display[column] = preview_display[column].map(format_pct)
+
+        preview_display["volatility_multiplier"] = preview_display["volatility_multiplier"].map(format_num)
+
+        pairwise_df = pd.DataFrame(
+            ai_scenario_adjustments["pairwise_correlation_adjustments"]
+        )
+        if not pairwise_df.empty:
+            pairwise_df["pair"] = pairwise_df["asset_1"] + " / " + pairwise_df["asset_2"]
+            pairwise_display = pairwise_df[["pair", "shift"]].copy()
+            pairwise_display["shift"] = pairwise_display["shift"].map(format_num)
+        else:
+            pairwise_display = pd.DataFrame(columns=["pair", "shift"])
+
+        summary_col_1, summary_col_2, summary_col_3 = st.columns([1, 1, 1])
+
+        with summary_col_1:
+            st.markdown("**Interpreted Regime**")
+            st.write(", ".join(ai_scenario_adjustments["regime_labels"]))
+
+        with summary_col_2:
+            st.markdown("**Parser Confidence**")
+            st.write(ai_scenario_adjustments["confidence"].title())
+
+        with summary_col_3:
+            st.markdown("**Broad Correlation Shift**")
+            st.write(format_num(ai_scenario_adjustments["correlation_shift"]))
+
+        st.markdown("**Scenario Summary**")
+        st.write(ai_summary)
+
+        preview_col_1, preview_col_2 = st.columns([1.5, 1])
+
+        with preview_col_1:
+            st.markdown("**Generated Asset Assumptions**")
+            st.dataframe(preview_display, width="stretch", hide_index=True)
+
+        with preview_col_2:
+            st.markdown("**Pairwise Correlation Adjustments**")
+            if pairwise_display.empty:
+                st.info("No pair-specific correlation adjustments were generated.")
+            else:
+                st.dataframe(pairwise_display, width="stretch", hide_index=True)
+
+        st.markdown("**Adjusted Correlation Matrix**")
+        st.dataframe(
+            pd.DataFrame(
+                ai_scenario_adjustments["adjusted_correlation_matrix"],
+                index=asset_names,
+                columns=asset_names,
+            ).style.format("{:.2f}"),
+            width="stretch",
+        )
+
+        if run_ai_scenario:
+            try:
+                ai_simulation_results = run_monte_carlo_engine(
+                    weights=weights,
+                    mean_returns=ai_scenario_adjustments["adjusted_mean_returns"],
+                    covariance_matrix=ai_covariance_daily,
+                    num_simulations=num_simulations,
+                    time_horizon_days=time_horizon_days,
+                    initial_portfolio_value=initial_portfolio_value,
+                )
+                st.session_state["ai_scenario_simulation_results"] = ai_simulation_results
+                st.session_state["ai_scenario_risk_summary"] = build_risk_summary(
+                    terminal_returns=ai_simulation_results["terminal_returns"],
+                    portfolio_paths=ai_simulation_results["portfolio_paths"],
+                )
+            except Exception as exc:
+                st.error(f"AI scenario simulation error: {exc}")
+                st.session_state["ai_scenario_simulation_results"] = None
+                st.session_state["ai_scenario_risk_summary"] = None
+
+    ai_risk_summary = st.session_state["ai_scenario_risk_summary"]
+    ai_simulation_results = st.session_state["ai_scenario_simulation_results"]
+
+    if ai_risk_summary is not None and ai_simulation_results is not None:
+        st.markdown("**AI Scenario Risk Summary**")
+        ai_metric_col_1, ai_metric_col_2, ai_metric_col_3, ai_metric_col_4 = st.columns(4)
+        ai_metric_col_1.metric("Mean Return", format_pct(ai_risk_summary["mean_return"]))
+        ai_metric_col_2.metric("Volatility", format_pct(ai_risk_summary["volatility"]))
+        ai_metric_col_3.metric("VaR 95", format_pct(ai_risk_summary["var_95"]))
+        ai_metric_col_4.metric("Expected Shortfall", format_pct(ai_risk_summary["es_95"]))
+
+        ai_metric_col_5, ai_metric_col_6, ai_metric_col_7, ai_metric_col_8 = st.columns(4)
+        ai_metric_col_5.metric("VaR 99", format_pct(ai_risk_summary["var_99"]))
+        ai_metric_col_6.metric("Probability of Loss", format_pct(ai_risk_summary["probability_of_loss"]))
+        ai_metric_col_7.metric("Max Drawdown", format_pct(ai_risk_summary["max_drawdown"]))
+        ai_metric_col_8.metric("Sharpe Ratio", format_num(ai_risk_summary["sharpe_ratio"]))
+
+        ai_chart_col_1, ai_chart_col_2 = st.columns(2)
+
+        with ai_chart_col_1:
+            st.markdown("**Terminal Return Distribution**")
+            render_matplotlib_chart(
+                plot_return_distribution,
+                ai_simulation_results["terminal_returns"],
+                ai_risk_summary["var_95"],
+                ai_risk_summary["es_95"],
+            )
+
+        with ai_chart_col_2:
+            st.markdown("**Portfolio Paths**")
+            render_matplotlib_chart(
+                plot_portfolio_paths,
+                ai_simulation_results["portfolio_paths"],
+                100,
+            )

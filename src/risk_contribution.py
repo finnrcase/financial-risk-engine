@@ -183,4 +183,9 @@ def build_risk_contribution_summary(
         "percentage_risk_contribution": percentage_risk_contribution,
     })
 
+    summary = summary.sort_values(
+        by="percentage_risk_contribution",
+        ascending=False
+    ).reset_index(drop=True)
+
     return summary
