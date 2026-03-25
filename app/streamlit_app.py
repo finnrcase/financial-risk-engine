@@ -1021,7 +1021,7 @@ with tab_3:
     else:
         render_panel_intro(
             "Scenario comparison table",
-            "All configured comparison scenarios with the same metrics and no workflow changes.",
+            "Configured comparison scenarios across the selected risk metrics.",
         )
         st.dataframe(scenario_comparison_display, width="stretch", hide_index=True)
 
@@ -1063,7 +1063,7 @@ with tab_4:
     with weights_col:
         render_panel_intro(
             "Optimization weights",
-            "Current and optimized allocations with the same underlying outputs.",
+            "Current and optimized portfolio allocations.",
         )
         st.dataframe(optimization_weights_display, width="stretch", hide_index=True)
 
@@ -1083,7 +1083,7 @@ with tab_4:
 with tab_5:
     render_section_header(
         "JrAnalyst.AI",
-        "Deterministic portfolio commentary generated from the current analytics state.",
+        "Portfolio commentary for the current analytics state.",
     )
 
     st.markdown('<div class="insight-card">', unsafe_allow_html=True)
