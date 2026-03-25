@@ -856,11 +856,10 @@ st.markdown(
         <div class="hero-grid">
             <div>
                 <div class="eyebrow">Financial Risk Engine</div>
-                <div class="hero-title">A calmer, sharper analytics surface for portfolio risk work.</div>
+                <div class="hero-title">Institutional portfolio risk analytics for simulation, stress testing, and optimization.</div>
                 <p class="hero-copy">
-                    The product logic is unchanged. This interface keeps the same simulation, scenario,
-                    attribution, and optimization workflows, but reframes them with softer modular surfaces,
-                    stronger spacing, and a more intentional visual hierarchy.
+                    Explore Monte Carlo risk, scenario stress, attribution, optimization, and AI-assisted
+                    scenario design from a single operating surface built for investment and strategy teams.
                 </p>
             </div>
             <div class="hero-meta">
@@ -889,7 +888,7 @@ st.markdown(
 
 render_section_header(
     "Portfolio Setup",
-    "Inputs remain exactly the same, but the overview is grouped more deliberately so allocation, assumptions, and core risk signals read as one coherent operating surface.",
+    "Review portfolio composition, annual assumptions, and core risk signals in a single overview.",
     chip=available_scenarios[selected_scenario],
 )
 
@@ -910,14 +909,14 @@ overview_col_1, overview_col_2 = st.columns([1.25, 0.95])
 with overview_col_1:
     render_panel_intro(
         "Portfolio assumptions",
-        "Asset mix, expected annual return, and annual volatility remain unchanged; the framing is simply cleaner and easier to scan.",
+        "Asset mix, expected annual return, and annual volatility for the current portfolio.",
     )
     st.dataframe(overview_display, width="stretch", hide_index=True)
 
 with overview_col_2:
     render_panel_intro(
         "Allocation snapshot",
-        "A softer framing for current exposure by asset class.",
+        "Current exposure by asset class.",
     )
     render_matplotlib_chart(plot_portfolio_allocation, asset_names, weights)
 
@@ -949,7 +948,7 @@ tab_1, tab_2, tab_3, tab_4, tab_5, tab_6 = st.tabs([
 with tab_1:
     render_section_header(
         "Core Risk Dashboard",
-        "The same Monte Carlo views, now grouped into cleaner analytical modules with more breathing room and chart framing.",
+        "Monte Carlo outcome views for returns, drawdowns, and sampled portfolio paths.",
     )
 
     chart_col_1, chart_col_2 = st.columns(2)
@@ -1004,7 +1003,7 @@ with tab_2:
     with attr_col_2:
         render_panel_intro(
             "Risk contribution chart",
-            "A cleaner visual read on which sleeves dominate portfolio risk.",
+            "Which sleeves dominate portfolio risk under the active scenario.",
         )
         render_matplotlib_chart(
             plot_risk_contributions,
@@ -1039,7 +1038,7 @@ with tab_3:
 with tab_4:
     render_section_header(
         "Optimization",
-        "Optimization logic is unchanged; the redesign simply gives current, min-variance, and max-Sharpe states equal visual footing.",
+        "Compare current positioning with minimum-variance and maximum-Sharpe portfolio outputs.",
     )
 
     opt_col_1, opt_col_2, opt_col_3 = st.columns(3)
@@ -1084,7 +1083,7 @@ with tab_4:
 with tab_5:
     render_section_header(
         "JrAnalyst.AI",
-        "The interpretation layer is unchanged, but it now reads like productized research output rather than default text blocks.",
+        "Deterministic portfolio commentary generated from the current analytics state.",
     )
 
     st.markdown('<div class="insight-card">', unsafe_allow_html=True)
@@ -1112,7 +1111,7 @@ with tab_5:
 with tab_6:
     render_section_header(
         "AI Scenario Designer",
-        "The narrative-to-assumption workflow stays intact while the prompt, generated assumptions, and simulation output are framed more deliberately.",
+        "Translate a market narrative into structured assumptions and run a dedicated simulation.",
     )
 
     render_panel_intro(
