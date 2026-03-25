@@ -132,10 +132,15 @@ def inject_design_system() -> None:
             --surface: rgba(255, 255, 255, 0.92);
             --surface-strong: #ffffff;
             --surface-muted: #eef2f7;
+            --sidebar-surface: #edf2f7;
+            --input-surface: #f8fbfe;
+            --input-surface-strong: #ffffff;
             --text: #0f172a;
             --muted: #5b6474;
             --line: rgba(15, 23, 42, 0.08);
             --line-strong: rgba(73, 99, 138, 0.22);
+            --input-line: rgba(69, 106, 152, 0.28);
+            --input-line-strong: rgba(69, 106, 152, 0.52);
             --accent: #6f93bf;
             --accent-strong: #456a98;
             --accent-soft: rgba(111, 147, 191, 0.16);
@@ -166,8 +171,8 @@ def inject_design_system() -> None:
 
         [data-testid="stSidebar"] {
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 248, 251, 0.98) 100%);
-            border-right: 1px solid var(--line);
+                linear-gradient(180deg, #e7edf4 0%, var(--sidebar-surface) 100%);
+            border-right: 1px solid rgba(15, 23, 42, 0.12);
         }
 
         [data-testid="stSidebar"] > div:first-child {
@@ -175,9 +180,9 @@ def inject_design_system() -> None:
         }
 
         [data-testid="stSidebar"] [data-testid="stExpander"] {
-            border: 1px solid var(--line);
+            border: 1px solid rgba(69, 106, 152, 0.16);
             border-radius: var(--radius-md);
-            background: rgba(255, 255, 255, 0.76);
+            background: linear-gradient(180deg, rgba(247, 250, 253, 0.98), rgba(239, 244, 249, 0.98));
             box-shadow: var(--shadow-card);
             overflow: hidden;
         }
@@ -185,6 +190,14 @@ def inject_design_system() -> None:
         [data-testid="stSidebar"] [data-testid="stExpander"] details summary {
             padding: 0.9rem 1rem;
             font-weight: 600;
+            background: rgba(255, 255, 255, 0.42);
+        }
+
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] span {
+            color: var(--text) !important;
         }
 
         .hero-card,
@@ -376,15 +389,63 @@ def inject_design_system() -> None:
         div[data-baseweb="select"] > div,
         .stMultiSelect [data-baseweb="select"] > div {
             border-radius: 16px !important;
-            border-color: rgba(15, 23, 42, 0.1) !important;
-            background: rgba(255, 255, 255, 0.92) !important;
-            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+            border: 1px solid var(--input-line) !important;
+            background: linear-gradient(180deg, var(--input-surface-strong), var(--input-surface)) !important;
+            box-shadow:
+                inset 0 1px 2px rgba(15, 23, 42, 0.03),
+                0 1px 0 rgba(255, 255, 255, 0.8);
+            color: var(--text) !important;
+        }
+
+        .stTextInput input::placeholder,
+        .stTextArea textarea::placeholder,
+        .stNumberInput input::placeholder {
+            color: #7b8798 !important;
+        }
+
+        .stTextInput input:focus,
+        .stTextArea textarea:focus,
+        .stNumberInput input:focus {
+            border-color: var(--input-line-strong) !important;
+            box-shadow:
+                0 0 0 1px rgba(69, 106, 152, 0.16),
+                0 0 0 4px rgba(111, 147, 191, 0.14) !important;
+        }
+
+        div[data-baseweb="select"] > div:focus-within,
+        .stMultiSelect [data-baseweb="select"] > div:focus-within {
+            border-color: var(--input-line-strong) !important;
+            box-shadow:
+                0 0 0 1px rgba(69, 106, 152, 0.16),
+                0 0 0 4px rgba(111, 147, 191, 0.14) !important;
+        }
+
+        [data-testid="stSidebar"] .stTextInput input,
+        [data-testid="stSidebar"] .stTextArea textarea,
+        [data-testid="stSidebar"] .stNumberInput input,
+        [data-testid="stSidebar"] div[data-baseweb="select"] > div,
+        [data-testid="stSidebar"] .stMultiSelect [data-baseweb="select"] > div {
+            background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%) !important;
+            border: 1px solid rgba(69, 106, 152, 0.34) !important;
+            box-shadow:
+                inset 0 1px 2px rgba(15, 23, 42, 0.04),
+                0 6px 14px rgba(15, 23, 42, 0.04);
         }
 
         div[data-baseweb="tag"] {
             border-radius: 999px !important;
             background: var(--accent-soft) !important;
             color: var(--accent-strong) !important;
+        }
+
+        [data-testid="stSidebar"] [data-baseweb="slider"] > div > div:first-child {
+            background: rgba(69, 106, 152, 0.18) !important;
+        }
+
+        [data-testid="stSidebar"] [data-baseweb="slider"] [role="slider"] {
+            background: var(--accent-strong) !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
         }
 
         [data-testid="stDataFrame"],
